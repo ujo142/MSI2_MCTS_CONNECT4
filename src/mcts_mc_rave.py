@@ -3,7 +3,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from src.game_finished_checker import check_if_game_finished, get_available_moves, make_move, COMPUTER, get_result
+from game_finished_checker import check_if_game_finished, get_available_moves, make_move, COMPUTER, get_result
 
 
 class Node:

@@ -1,7 +1,7 @@
 import random
 
-from src.game_finished_checker import HEIGHT, WIDTH, COMPUTER, HUMAN, is_valid_move, _print_board
-from src.mcts_mc_rave import Node, MCTS_MC_RAVE
+from game_finished_checker import HEIGHT, WIDTH, COMPUTER, HUMAN, is_valid_move, _print_board
+from mcts_mc_rave import Node, MCTS_MC_RAVE
 
 
 class Connect4:

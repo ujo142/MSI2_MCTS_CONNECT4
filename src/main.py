@@ -1,5 +1,5 @@
-from src.connect4 import Connect4
-from src.game_finished_checker import COMPUTER
+from connect4 import Connect4
+from game_finished_checker import COMPUTER
 import pygame
 
 
@@ -34,7 +34,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Connect Four")
 
 # Wczytanie obrazu tła
-background_image = pygame.image.load('./images/czacha.png')
+background_image = pygame.image.load('./images/radek.png')
 background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
 # Funkcja do rysowania planszy
