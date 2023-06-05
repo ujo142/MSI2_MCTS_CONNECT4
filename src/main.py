@@ -2,7 +2,6 @@ from connect4 import Connect4
 from game_finished_checker import COMPUTER
 import pygame
 
-
 # Inicjalizacja Pygame
 pygame.init()
 
