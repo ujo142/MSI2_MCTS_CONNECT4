@@ -1,69 +1,17 @@
 import math
 from collections import defaultdict
 
+from src.MCTS import MCTS
 
-class MCTS_PUCT:
-    def __init__(self, exploration_weight=1, bias_weight=1):
-        self.exploration_weight = exploration_weight
+
+class MCTS_PUCT(MCTS):
+    def __init__(self, exploration_weight=1, bias_weight=1, heuristic=None):
+        super().__init__(exploration_weight, heuristic)
         self.bias_weight = bias_weight
         self.name = "MCTS_PUCT"
-
-        self.Q = defaultdict(int)
-        self.N = defaultdict(int)
+        if heuristic is not None:
+            self.name += "_" + heuristic.name
         self.N_bias = defaultdict(int)  # Licznik wzmocnienia
-        self.children = dict()
-
-
-    def choose(self, node):
-        assert not node.terminal, f"Choose was called on terminal node {node}"
-
-        if node not in self.children:
-            return node.make_random_move()
-
-        def score(n):
-            if self.N[n] == 0:
-                return -math.inf
-            return self.Q[n] / self.N[n] 
-
-        
-
-        return max(self.children[node], key=score)
-
-    def playout(self, node):
-        path = self._select(node)
-        leaf = path[-1]
-        self._expand(leaf)
-        reward = self._simulate(leaf)
-        self._backprop(path, reward)
-
-
-    def _select(self, node):
-        path = []
-        while True:
-            path.append(node)
-            if node not in self.children or not self.children[node]:
-                return path
-            unexplored = self.children[node] - self.children.keys()
-            if unexplored:
-                n = unexplored.pop()
-                path.append(n)
-                return path
-            node = self._uct_select(node)
-
-    def _expand(self, node):
-        if node in self.children:
-            return
-        self.children[node] = node.find_children()
-
-    def _simulate(self, node):
-        invert_reward = True
-        while True:
-            if node.terminal:
-                reward = node.reward()
-                reward = 1 - reward if invert_reward else reward
-                return reward
-            node = node.make_random_move()
-            invert_reward = not invert_reward
 
     def _backprop(self, path, reward):
         for node in reversed(path):
@@ -78,7 +26,8 @@ class MCTS_PUCT:
         log_N_vertex = math.log(self.N[node])
 
         def uct(n):
-            return self.Q[n] / self.N[n] + self.exploration_weight * math.sqrt(
+            heuristic_val = self.heuristic.evaluate(n.board) if self.heuristic is not None else 0
+            return ((self.Q[n] + heuristic_val) / self.N[n]) + self.exploration_weight * math.sqrt(
                 log_N_vertex / self.N[n]) - self.bias_weight/self.N_bias[n] * max(1, math.sqrt(log_N_vertex) / self.N[n])
             
 
