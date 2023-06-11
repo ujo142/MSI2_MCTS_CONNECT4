@@ -15,6 +15,9 @@ from src.MCTS_rave import MCTS_RAVE
 
 
 # Has to be separate file than Connect4Board for pickle
+from src.heuristics import CentralHeuristic, PotentialSeriesHeuristic
+
+
 def play_game():
     tree = load_tree(f"MCTS_1m_6_7_100.pkl")
     board = Connect4Board.create_empty_board(6, 7)
@@ -91,7 +94,7 @@ def play_2_models(tree1: MCTS, tree2: MCTS, n_games: int = 100):
             if board.terminal: break
         total_moves.append(moves)
         if board.winner is not None:  # if board.winner == 1 then first player won
-            winnings[player_order[abs(board.winner - 1)]] += 1  # imnot sure
+            winnings[player_order[abs(board.winner - 1)]] += 1
         else:
             winnings[-1] += 1
     end_time = datetime.now()
@@ -115,10 +118,10 @@ def compete_2_models():
     ## Two trees play
     for i in [1]:
         print(f"For i={i}")
-        tree1 = load_tree(f"MCTS_{i}m_6_7_100.pkl")
-        tree2 = load_tree(f"MCTS_RAVE_{i}m_6_7_100.pkl")
+        tree1 = load_tree(f"MCTS_RAVE_{i}m_6_7_100.pkl")
+        tree2 = load_tree(f"MCTS_RAVE_central_{i}m_6_7_100.pkl")
         # tree2 = load_tree(f"mcts_rave_{i}m_6_7_100.pkl")
-        play_2_models(tree1, tree2, 10000)
+        play_2_models(tree1, tree2, 20000)
 
 
 def train_one_tree():
@@ -142,5 +145,5 @@ def train_one_tree():
 
 if __name__ == "__main__":
     #train_one_tree()
-    #compete_2_models()
-    play_game()
+    compete_2_models()
+    #play_game()

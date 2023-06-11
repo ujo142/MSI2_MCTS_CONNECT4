@@ -5,6 +5,7 @@ from typing import Optional, Tuple, Generator, Set
 import numpy as np
 
 from mcts_node import MCTSNode
+from src.heuristics import Heuristic
 
 Pos = Tuple[int, int]  # h,w
 
@@ -14,6 +15,7 @@ class Connect4Board(MCTSNode):
     board: np.ndarray
     height: int
     width: int
+    #heuristic: Heuristic = None
 
     turn: bool = True
     winner: bool = None
@@ -113,4 +115,11 @@ class Connect4Board(MCTSNode):
 
     def empty_in_arr(self, arr: np.array) -> bool:
         return (arr == self.empty_field).any()
+
+    def heuristic_value(self):
+        if self.heuristic is not None:
+            player1 = self.heuristic.evaluate(self.board, 0)
+            player2 = self.heuristic.evaluate(self.board, 1)
+            return player1, player2
+        return 0, 0
 

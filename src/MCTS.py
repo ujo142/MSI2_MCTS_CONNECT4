@@ -3,13 +3,14 @@ from collections import defaultdict
 
 
 class MCTS:
-    def __init__(self, exploration_weight=1):
+    def __init__(self, exploration_weight=1, heuristic=None):
         self.exploration_weight = exploration_weight
-        self.name = "MCTS"
+        self.name = f"MCTS" if heuristic is None else f"MCTS_{heuristic.name}"
 
         self.Q = defaultdict(int)
         self.N = defaultdict(int)
         self.children = dict()
+        self.heuristic = heuristic
 
 
     def choose(self, node):
@@ -21,7 +22,8 @@ class MCTS:
         def score(n):
             if self.N[n] == 0:
                 return -math.inf
-            return self.Q[n] / self.N[n]
+            heuristic_value = self.heuristic.evaluate(n.board) if self.heuristic is not None else 0
+            return (self.Q[n] + heuristic_value) / self.N[n]
 
         return max(self.children[node], key=score)
 
@@ -71,9 +73,9 @@ class MCTS:
         assert all(n in self.children for n in self.children[node])
 
         log_N_vertex = math.log(self.N[node])
-
         def uct(n):
-            return self.Q[n] / self.N[n] + self.exploration_weight * math.sqrt(
+            heuristic_val = self.heuristic.evaluate(n.board) if self.heuristic is not None else 0
+            return (self.Q[n] + heuristic_val) / self.N[n] + self.exploration_weight * math.sqrt(
                 log_N_vertex / self.N[n]
             )
 

@@ -5,9 +5,11 @@ from src.MCTS import MCTS
 
 
 class MCTS_RAVE(MCTS):
-    def __init__(self, exploration_w = 1, rave_v=10):
-        super().__init__(exploration_w)
+    def __init__(self, exploration_w = 1, rave_v=10, heuristic=None):
+        super().__init__(exploration_w, heuristic)
         self.name = "MCTS_RAVE"
+        if heuristic is not None:
+            self.name += "_" + heuristic.name
         self.AMAF_Q = defaultdict(int)
         self.RAVE_V = rave_v
 
@@ -62,7 +64,8 @@ class MCTS_RAVE(MCTS):
 
         def uct(n):
             "Upper confidence bound for trees"
-            return self.Q[n] / self.N[n] + self.exploration_weight * math.sqrt(
+            heuristic_val = self.heuristic.evaluate(n.board) if self.heuristic is not None else 0
+            return ((self.Q[n] + heuristic_val) / self.N[n]) + self.exploration_weight * math.sqrt(
                 log_N_vertex / self.N[n]
             )
 
