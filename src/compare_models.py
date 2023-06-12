@@ -23,63 +23,6 @@ from MCTS_rave import MCTS_RAVE
 from heuristics import CentralHeuristic, PotentialSeriesHeuristic
 
 
-def play_game():
-    tree = load_tree(f"MCTS_10m_6_7_100.pkl")
-    board = Connect4Board.create_empty_board(6, 7)
-    while True:
-        row = int(input("Enter row: "))
-        board = board.make_move(row)
-        print(board.board)
-        if board.terminal:
-            break
-
-        for _ in range(100):
-            tree.playout(board)
-        board: Connect4Board = tree.choose(board)
-        print()
-        print(board.board)
-        if board.terminal:
-            break
-    print("Game ended:")
-    print(board.board)
-
-
-def self_play(tree: MCTS, config, filename):
-    start_time = datetime.now()
-    loop_condition = count() if config.time else tqdm(range(config.n_self_play))
-    time_exit = False
-    games_moves = []
-    for game_idx in loop_condition:
-        board = Connect4Board.create_empty_board(config.height, config.width)
-        game_moves = 0
-        while True:
-            for _ in range(config.n_rollouts):  # rollout = single game simulation iteration
-                tree.playout(board)
-            board = tree.choose(board)  # wybierz ruch
-            game_moves += 1
-            # print(board.board)
-            if board.terminal:
-                break
-
-            if config.time and (datetime.now() - start_time).total_seconds() / 60 > config.time:
-                time_exit = True
-                print(f"Breaking because of elapsed more than {config.time}.")
-                break
-        print(f"{game_idx} game ended.")
-        games_moves.append(game_moves)
-        if time_exit:
-            break
-
-    # Stats
-    avg_game_moves = sum(games_moves[:-1]) / game_idx if game_idx > 0 else 0
-    logging.info(f"Elapsed {(datetime.now() - start_time).total_seconds()}")
-    logging.info(
-        f"Total games played: {game_idx}, total_moves: {sum(games_moves)}, avg_game_moves: {avg_game_moves}")
-
-    with open(config.save_dir / f'{filename}.pkl', "wb") as f:
-        pkl.dump(tree, f)
-
-
 def play_2_models(tree1: MCTS, tree2: MCTS, player_order):
     trees = [tree1, tree2]
     total_moves = []
@@ -98,13 +41,6 @@ def play_2_models(tree1: MCTS, tree2: MCTS, player_order):
         return player_order[abs(board.winner - 1)]
     else:
         return -1
-
-
-def load_tree(filename: str):
-    save_pkl = Path(__file__).parent / "pickles" / filename
-    with open(save_pkl, 'rb') as f:
-        tree = pkl.load(f)
-    return tree
 
 
 def compete_2_models(config, tree1, tree2):
@@ -135,9 +71,6 @@ def compete_2_models(config, tree1, tree2):
     pd.DataFrame(results).to_csv(os.path.join(config.stats_path, f"{tree1.name}_vs_{tree2.name}_c{config.pretty_string()}.csv"), index=False, float_format="%.2f")
 
 
-
-
-
 if __name__ == "__main__":
     config = Config()
     trees = [MCTS(config, 0, heuristic=PotentialSeriesHeuristic()), MCTS_RAVE(config, 0, heuristic=PotentialSeriesHeuristic()),  MCTS_PUCT(config, 0, heuristic=PotentialSeriesHeuristic()), MCTS(config, 0, heuristic=CentralHeuristic()), MCTS_RAVE(config, 0, heuristic=CentralHeuristic()),  MCTS_PUCT(config, 0, heuristic=CentralHeuristic()), MCTS(config, 0), MCTS_RAVE(config, 0),  MCTS_PUCT(config, 0)]
@@ -145,11 +78,17 @@ if __name__ == "__main__":
     for i in range(len(trees)):
         for j in range(i+1, len(trees)):
             all_pairs.append((i, j))
-    processes = []
-    for pair in all_pairs[24:]:
-        process = multiprocessing.Process(target=compete_2_models, args=(config,trees[pair[0]],trees[pair[1]]))
-        process.start()
-        processes.append(process)
-    for process in processes:
-        process.join()
-        process.close()
+    n_cpus = os.cpu_count()
+    chunks = []
+    for i in range(0, len(all_pairs), n_cpus):
+        chunks.append(all_pairs[i:i+n_cpus])
+
+    for chunk in chunks:
+        processes = []
+        for pair in chunk:
+            process = multiprocessing.Process(target=compete_2_models, args=(config,trees[pair[0]],trees[pair[1]]))
+            process.start()
+            processes.append(process)
+        for process in processes:
+            process.join()
+            process.close()

@@ -1,76 +1,91 @@
 import random
+import time
 
 from connect4_board import Connect4Board
-from connect4_game import load_tree
+import PySimpleGUI as sg
 
-import pygame
+from config import Config
+from MCTS import MCTS
+from MCTS_puct import MCTS_PUCT
+from MCTS_rave import MCTS_RAVE
+from heuristics import PotentialSeriesHeuristic, CentralHeuristic
 
-# Inicjalizacja Pygame
-pygame.init()
+config = Config()
+trees = [MCTS(config, int(time.time()), heuristic=PotentialSeriesHeuristic()), MCTS_RAVE(config, int(time.time()), heuristic=PotentialSeriesHeuristic()),  MCTS_PUCT(config, int(time.time()), heuristic=PotentialSeriesHeuristic()), MCTS(config, int(time.time()), heuristic=CentralHeuristic()), MCTS_RAVE(config, int(time.time()), heuristic=CentralHeuristic()),  MCTS_PUCT(config, int(time.time()), heuristic=CentralHeuristic()), MCTS(config, int(time.time())), MCTS_RAVE(config, int(time.time())),  MCTS_PUCT(config, int(time.time()))]
 
 # Ustawienia planszy
-width = 700
-height = 600
-row_count = 6
-col_count = 7
-circle_radius = 50
-circle_color = (255, 255, 255)
-player1_color = (255, 0, 0)
-player2_color = (255, 255, 0)
+board = [[5 for _ in range(7)] for _ in range(6)]
+circle_colors = ["yellow", "red", "", "", "","black"]
 
-screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Connect 4")
+# Definicja layoutu
+layout = []
+for row in range(6):
+    row_layout = []
+    for col in range(7):
+        circle = sg.Button(button_text="   ", size=(3, 1), key=(row, col))
+        row_layout.append(circle)
+
+    layout.append(row_layout)
+
+# Tworzenie okna
+window = sg.Window("Connect 4", layout, finalize=True)
+
+def handle_click(board, col, player):
+    for row in range(5, -1, -1):
+        if board[row][col] == 5:
+            board[row][col] = player
+            window[(row, col)].update(button_color=('black', circle_colors[player]))
+            break
 
 
 def draw_board(board):
-    for row in range(row_count):
-        for col in range(col_count):
-            pygame.draw.circle(screen, circle_color, (col * 100 + 50, row * 100 + 100), circle_radius)
-            if board[row][col] == 0:
-                pygame.draw.circle(screen, player1_color, (col * 100 + 50, row * 100 + 100), circle_radius - 5)
-            elif board[row][col] == 1:
-                pygame.draw.circle(screen, player2_color, (col * 100 + 50, row * 100 + 100), circle_radius - 5)
+    for row in range(6):
+        for col in range(7):
+            player = board[row][col]
+            window[(row, col)].update(button_color=('black', circle_colors[player]))
+
 
 
 
 def play_vs_ai():
-    tree = load_tree(f"MCTS_10m_6_7_100.pkl")
+    tree = MCTS(config, int(time.time()))
     board = Connect4Board.create_empty_board(6, 7)
-    def refresh():
-        screen.fill((0,0,0))
-        draw_board(board.board)
-        pygame.display.flip()
+    draw_board(board.board)
 
     player_turn = bool(random.getrandbits(1))
+    player_checker = 0
     while True:
         while player_turn:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    return
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    col = event.pos[0] // 100
-                    if 0 <= col < col_count:
-                        board.make_move(col)
-                        player_turn = False
+            event, values = window.read()
+            if event == sg.WINDOW_CLOSED:
+                return
+            col = event[1]
+            handle_click(board.board, col, player_checker)
+            player_turn=False
+            draw_board(board.board)
         # row = int(input("Enter row: "))
         # board = board.make_move(row)
         # print(board.board)
-        refresh()
         if board.terminal:
             break
 
-        for _ in range(100):
-            tree.playout(board)
-        board: Connect4Board = tree.choose(board)
+        board: Connect4Board = tree.make_move(board)
         player_turn = True
         # print()
         # print(board.board)
-        refresh()
+        draw_board(board.board)
         if board.terminal:
             break
-    print("Game ended:")
+    winner = board.winner
+    if winner == 0:
+        winner = "human won"
+    elif winner == 1:
+        winner = "bot won"
+    else:
+        winner = "draw"
+    print("Game ended: " + winner)
     print(board.board)
 
 play_vs_ai()
 
-pygame.quit()
+window.close()
