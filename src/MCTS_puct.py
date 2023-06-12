@@ -1,7 +1,7 @@
 import math
 from collections import defaultdict
 
-from src.MCTS import MCTS
+from MCTS import MCTS
 
 
 class MCTS_PUCT(MCTS):

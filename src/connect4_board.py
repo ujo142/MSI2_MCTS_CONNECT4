@@ -5,7 +5,6 @@ from typing import Optional, Tuple, Generator, Set
 import numpy as np
 
 from mcts_node import MCTSNode
-from src.heuristics import Heuristic
 
 Pos = Tuple[int, int]  # h,w
 

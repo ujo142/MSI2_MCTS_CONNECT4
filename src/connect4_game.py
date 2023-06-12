@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 import pickle as pkl
 from datetime import datetime
 from itertools import count
@@ -11,11 +12,12 @@ from tqdm import tqdm
 from config import SelfPlayConfig
 from connect4_board import Connect4Board
 from MCTS import MCTS
-from src.MCTS_rave import MCTS_RAVE
+from MCTS_puct import MCTS_PUCT
+from MCTS_rave import MCTS_RAVE
 
 
 # Has to be separate file than Connect4Board for pickle
-from src.heuristics import CentralHeuristic, PotentialSeriesHeuristic
+from heuristics import CentralHeuristic, PotentialSeriesHeuristic
 
 
 def play_game():
@@ -116,7 +118,7 @@ def load_tree(filename: str):
 
 def compete_2_models():
     ## Two trees play
-    for i in [1]:
+    for i in [10]:
         print(f"For i={i}")
         tree1 = load_tree(f"MCTS_RAVE_{i}m_6_7_100.pkl")
         tree2 = load_tree(f"MCTS_RAVE_central_{i}m_6_7_100.pkl")
@@ -124,9 +126,9 @@ def compete_2_models():
         play_2_models(tree1, tree2, 20000)
 
 
-def train_one_tree():
+def train_one_tree(tree):
     config = SelfPlayConfig()
-    tree = MCTS_RAVE()  # MCTS # MCTS_AMAF() # MCTS_RAVE()
+    #tree = MCTS_RAVE()  # MCTS # MCTS_AMAF() # MCTS_RAVE()
 
     filenames = f'{tree.name}_{config.pretty_string()}'
     config.log_dir.mkdir(exist_ok=True)
@@ -144,6 +146,14 @@ def train_one_tree():
 
 
 if __name__ == "__main__":
-    #train_one_tree()
+    # trees = [MCTS(heuristic=PotentialSeriesHeuristic()), MCTS_RAVE(heuristic=PotentialSeriesHeuristic()),  MCTS_PUCT(heuristic=PotentialSeriesHeuristic()), MCTS(heuristic=CentralHeuristic()), MCTS_RAVE(heuristic=CentralHeuristic()),  MCTS_PUCT(heuristic=CentralHeuristic()), MCTS(), MCTS_RAVE(),  MCTS_PUCT()]
+    # processes = []
+    # for tree in trees:
+    #     process = multiprocessing.Process(target=train_one_tree, args=(tree,))
+    #     process.start()
+    #     processes.append(process)
+    # for process in processes:
+    #     process.join()
+    #     process.close()
     compete_2_models()
     #play_game()
