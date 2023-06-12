@@ -64,16 +64,17 @@ def compete_2_models(config, tree1, tree2):
         tree2_playouts.append(tree2.total_playouts)
         player_order.reverse()
         winnings[result] += 1
-
-    results = {"Tree": [tree1.name, tree2.name], "Wins": [winnings[0], winnings[1]], "Draws": [winnings[-1], winnings[-1]], "Losses": [winnings[1], winnings[0]],
+    fulltreename1 = f"{tree1.name}_exp{tree1.exploration_weight}"
+    fulltreename2 = f"{tree2.name}_exp{tree2.exploration_weight}"
+    results = {"Tree": [fulltreename1, fulltreename2], "Wins": [winnings[0], winnings[1]], "Draws": [winnings[-1], winnings[-1]], "Losses": [winnings[1], winnings[0]],
                "Avg_moves": [np.mean(tree1_moves), np.mean(tree2_moves)], "Avg_playouts": [np.mean(tree1_playouts), np.mean(tree2_playouts)],
                "Avg_playouts_per_move": [np.mean(tree1_playouts) / np.mean(tree1_moves), np.mean(tree2_playouts) / np.mean(tree2_moves)]}
-    pd.DataFrame(results).to_csv(os.path.join(config.stats_path, f"{tree1.name}_vs_{tree2.name}_c{config.pretty_string()}.csv"), index=False, float_format="%.2f")
+    pd.DataFrame(results).to_csv(os.path.join(config.stats_path, f"{fulltreename1}_vs_{fulltreename2}_c{config.pretty_string()}.csv"), index=False, float_format="%.2f")
 
 
 if __name__ == "__main__":
     config = Config()
-    trees = [MCTS(config, 0, heuristic=PotentialSeriesHeuristic()), MCTS_RAVE(config, 0, heuristic=PotentialSeriesHeuristic()),  MCTS_PUCT(config, 0, heuristic=PotentialSeriesHeuristic()), MCTS(config, 0, heuristic=CentralHeuristic()), MCTS_RAVE(config, 0, heuristic=CentralHeuristic()),  MCTS_PUCT(config, 0, heuristic=CentralHeuristic()), MCTS(config, 0), MCTS_RAVE(config, 0),  MCTS_PUCT(config, 0)]
+    trees = [MCTS(config, 0, exploration_weight=wght) for wght in np.arange(0.5, 5, 0.5)]
     all_pairs = []
     for i in range(len(trees)):
         for j in range(i+1, len(trees)):

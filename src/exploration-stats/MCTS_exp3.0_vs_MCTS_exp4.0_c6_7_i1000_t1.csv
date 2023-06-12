@@ -1,0 +1,3 @@
+Tree,Wins,Draws,Losses,Avg_moves,Avg_playouts,Avg_playouts_per_move
+MCTS_exp3.0,12,0,8,9.95,1453.40,146.07
+MCTS_exp4.0,8,0,12,9.85,1435.90,145.78
