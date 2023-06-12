@@ -1,9 +1,11 @@
 import math
 from collections import defaultdict
 
+import numpy as np
+import time
 
 class MCTS:
-    def __init__(self, exploration_weight=1, heuristic=None):
+    def __init__(self, config, rng_seed, exploration_weight=math.sqrt(2), heuristic=None):
         self.exploration_weight = exploration_weight
         self.name = f"MCTS" if heuristic is None else f"MCTS_{heuristic.name}"
 
@@ -11,13 +13,37 @@ class MCTS:
         self.N = defaultdict(int)
         self.children = dict()
         self.heuristic = heuristic
+        self.rng = np.random.default_rng(rng_seed)
+        self.max_playouts = config.max_rollouts
+        self.time_rollouts = config.time_rollouts
+        self.total_playouts = 0
+        self.total_moves = 0
 
+    def reset(self, rng_seed):
+        self.Q.clear()
+        self.N.clear()
+        self.children.clear()
+        self.total_playouts = 0
+        self.total_moves = 0
+        self.rng = np.random.default_rng(rng_seed)
+    def make_move(self, node):
+        self.total_moves += 1
+        start = time.process_time()
+        for _ in range(self.max_playouts):
+            self.playout(node)
+            self.total_playouts += 1
+            if (time.process_time() - start) > self.time_rollouts:
+                break
+        return self.choose(node)
+
+    def get_stats(self):
+        return f"Total moves: {self.total_moves}, total playouts: {self.total_playouts}, playouts per move: {self.total_playouts / self.total_moves}"
 
     def choose(self, node):
         assert not node.terminal, f"Choose was called on terminal node {node}"
 
         if node not in self.children:
-            return node.make_random_move()
+            return node.make_random_move(self.rng)
 
         def score(n):
             if self.N[n] == 0:
@@ -60,7 +86,7 @@ class MCTS:
                 reward = node.reward()
                 reward = 1 - reward if invert_reward else reward
                 return reward
-            node = node.make_random_move()
+            node = node.make_random_move(self.rng)
             invert_reward = not invert_reward
 
     def _backprop(self, path, reward):

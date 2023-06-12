@@ -8,7 +8,7 @@ class MCTSNode(ABC):
         return set()
 
     @abstractmethod
-    def make_random_move(self) -> 'MCTSNode':
+    def make_random_move(self, rng) -> 'MCTSNode':
         pass
 
     @property

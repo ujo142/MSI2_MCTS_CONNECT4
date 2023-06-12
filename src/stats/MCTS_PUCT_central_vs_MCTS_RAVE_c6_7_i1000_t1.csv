@@ -1,0 +1,3 @@
+Tree,Wins,Draws,Losses,Avg_moves,Avg_playouts,Avg_playouts_per_move
+MCTS_PUCT_central,20,0,0,5.70,987.90,173.32
+MCTS_RAVE,0,0,20,5.20,736.30,141.60

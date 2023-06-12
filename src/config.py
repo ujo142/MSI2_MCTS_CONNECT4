@@ -1,27 +1,15 @@
-from pathlib import Path
-
 from pydantic.main import BaseModel
 
 
-class MainConfig(BaseModel):
+class Config(BaseModel):
     height: int = 6
     width: int = 7
-    n_rollouts: int = 100
+    max_rollouts: int = 1000
+    time_rollouts: int = 1
+    seed: int = 42
+    n_games: int = 20
+    stats_path: str = "stats"
 
     def pretty_string(self):
-        return f"{self.height}_{self.width}_{self.n_rollouts}"
+        return f"{self.height}_{self.width}_i{self.max_rollouts}_t{self.time_rollouts}"
 
-
-class SelfPlayConfig(MainConfig):
-    # Exclusive
-    n_self_play: int = None
-    time: int = 10  # in minutes
-
-    save_dir = Path(__file__).parent / "pickles"
-    log_dir = Path(__file__).parent / "log"
-
-    def pretty_string(self):
-        if self.time:
-            return '_'.join([f"{self.time}m", super().pretty_string()])
-        else:
-            return '_'.join([f"{self.n_self_play}p", super().pretty_string()])

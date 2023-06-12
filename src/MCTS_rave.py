@@ -5,13 +5,17 @@ from MCTS import MCTS
 
 
 class MCTS_RAVE(MCTS):
-    def __init__(self, exploration_w = 1, rave_v=10, heuristic=None):
-        super().__init__(exploration_w, heuristic)
+    def __init__(self, config, rng_seed, exploration_w = math.sqrt(2), rave_v=10, heuristic=None):
+        super().__init__(config, rng_seed, exploration_w, heuristic)
         self.name = "MCTS_RAVE"
         if heuristic is not None:
             self.name += "_" + heuristic.name
         self.AMAF_Q = defaultdict(int)
         self.RAVE_V = rave_v
+
+    def reset(self, rng_seed):
+        super().reset(rng_seed)
+        self.AMAF_Q.clear()
 
     def playout(self, node):
         path = self._select(node)
@@ -41,7 +45,7 @@ class MCTS_RAVE(MCTS):
                 reward = node.reward()
                 reward = 1 - reward if invert_reward else reward
                 return reward, simulated_path
-            node = node.make_random_move()
+            node = node.make_random_move(self.rng)
             simulated_path.append(node)
             invert_reward = not invert_reward
 

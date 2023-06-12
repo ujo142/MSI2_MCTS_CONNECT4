@@ -26,22 +26,22 @@ class Connect4Board(MCTSNode):
         if self.terminal:  # If the game is finished then no moves can be made
             return set()
         return {
-            self.make_move(i) for i in self.avaliable_moves()
+            self.make_move(i) for i in self.get_available_moves()
         }
 
-    def avaliable_moves(self):
+    def get_available_moves(self):
         if not self.terminal:
             for i in range(0, self.width):
                 if self.empty_in_arr(self.board[:, i]):
                     yield i
 
-    def make_random_move(self):
+    def make_random_move(self, rng: np.random.default_rng):
         if self.terminal:
             return None  # If the game is finished then no moves can be made
-        avaliable_moves = list(self.avaliable_moves())
+        avaliable_moves = list(self.get_available_moves())
         if not avaliable_moves:
             raise RuntimeError("Game should have ended")
-        return self.make_move(choice(avaliable_moves))
+        return self.make_move(rng.choice(avaliable_moves))
 
     def reward(self):
         if not self.terminal:

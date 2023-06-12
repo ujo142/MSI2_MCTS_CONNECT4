@@ -5,13 +5,17 @@ from MCTS import MCTS
 
 
 class MCTS_PUCT(MCTS):
-    def __init__(self, exploration_weight=1, bias_weight=1, heuristic=None):
-        super().__init__(exploration_weight, heuristic)
+    def __init__(self, config, rng_seed, exploration_weight=math.sqrt(2), bias_weight=1, heuristic=None):
+        super().__init__(config, rng_seed, exploration_weight, heuristic)
         self.bias_weight = bias_weight
         self.name = "MCTS_PUCT"
         if heuristic is not None:
             self.name += "_" + heuristic.name
         self.N_bias = defaultdict(int)  # Licznik wzmocnienia
+
+    def reset(self, rng_seed):
+        super().reset(rng_seed)
+        self.N_bias.clear()
 
     def _backprop(self, path, reward):
         for node in reversed(path):
